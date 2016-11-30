@@ -1,0 +1,22 @@
+create table tweetsdata (dTime string , screenName string , name string , text string , tweetId bigint , app string , followers int , follows int , retweets int , fav int , verifed string , userS string , location string , bio string , image string , googlemap string) row format delimited fields terminated by ',';
+
+load data local inpath '/home/rajmaurya/Desktop/summer/data.csv' into table tweetsdata;
+
+create table temptweets as select text , tweetId from tweetsdata;
+
+create table split_words as select tweetId as tweetId,split(text,' ') as words from temptweets;
+
+
+select * from split_words;
+
+create table tweet_word as select tweetId as tweetId,word from split_words LATERAL VIEW explode(words) w as word;
+
+create table dictionary(word string,rating int) ROW FORMAT DELIMITED FIELDS TERMINATED BY '\t';
+
+load data local inpath '/home/rajmaurya/Desktop/summer/dic' into table dictionary;
+
+create table word_join as select tweet_word.tweetId,tweet_word.word,dictionary.rating from tweet_word LEFT OUTER JOIN dictionary ON(tweet_word.word =dictionary.word);
+
+select * from word_join;
+
+select tweetid,AVG(rating) as rating from word_join GROUP BY word_join.tweetId order by rating DESC;
